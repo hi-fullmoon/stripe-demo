@@ -10,10 +10,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(request: Request) {
   const body = await request.text();
   const signature = (await headers()).get('stripe-signature')!;
-
+  console.log('signature', signature);
   try {
     const event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
-    console.log('webhook event', event);
+    console.log('webhook event', event.type, event);
 
     switch (event.type) {
       case 'customer.subscription.created':

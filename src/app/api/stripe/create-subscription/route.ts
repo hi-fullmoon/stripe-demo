@@ -29,8 +29,6 @@ export async function POST(request: Request) {
       });
     }
 
-    console.log('customer', customer);
-
     // 创建 checkout session
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -42,8 +40,8 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}`,
+      success_url: `${process.env.PUBLIC_BASE_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.PUBLIC_BASE_URL}`,
       metadata: {
         customerId: customer.id,
         priceId,
