@@ -1,0 +1,77 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
+  SERVER_URL: http://sy.tests.run
+  STRIPE_PUBLISHABLE_KEY: pk_test_51QX1jcHoe7Ol6CSIfNzcRu7HlF0CYvPgu9WLFKCtfWuTqNuY99cAHyldtIL0sh7iJfhcUPX8iWFPBHs1fRVlI2VP00R2sJwuLi
+  STRIPE_SECRET_KEY: sk_test_51QX1jcHoe7Ol6CSIabyDEOUcUFmJMYmgHvdwcDEOjpDDBwAx01hrS76wMxVnU8Uv5PjIU4NQn9XU6vUnvFPKgD9x00W3q0HCj5
+  STRIPE_WEBHOOK_SECRET: whsec_R8Svws0uoSg9yH3nIiFkW6mTqStguq9F
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create .env.production file
+        run: |
+          cat << EOF > .env.production
+          SERVER_URL=${{ env.SERVER_URL }}
+          STRIPE_PUBLISHABLE_KEY=${{ env.STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_SECRET_KEY=${{ env.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }}
+          EOF
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/stripe-demo:${{ env.IMAGE_TAG }}
+
+      - name: Copy docker-compose.yml to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: 'docker-compose.yml'
+          target: '/opt/stripe-demo'
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script_stop: true
+          debug: true
+          envs: DOCKERHUB_USERNAME,IMAGE_TAG
+          script: |
+            mkdir -p /opt/stripe-demo
+            cd /opt/stripe-demo
+
+            cat << EOF > .env
+            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            IMAGE_TAG=${IMAGE_TAG}
+            EOF
+
+            docker-compose pull
+            docker-compose up -d

@@ -1,0 +1,7 @@
+services:
+  stripe-demo:
+    image: ${DOCKERHUB_USERNAME}/stripe-demo:${IMAGE_TAG}
+    pull_policy: always
+    restart: unless-stopped
+    ports:
+      - "4000:3000"
