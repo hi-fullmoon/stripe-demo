@@ -52,10 +52,10 @@ erDiagram
     TIMESTAMP updatedAt "更新时间"
   }
 
-  User ||--o{ Customer : has
-  Customer ||--|| Subscription : has
-  Customer ||--o{ Payment : has
-  Customer ||--o{ FeatureUsage : tracks
+  User ||--o{ Customer : "has"
+  Customer ||--|| Subscription : "has"
+  Customer ||--o{ Payment : "has"
+  Customer ||--o{ FeatureUsage : "records usage"
 ```
 
 ## Legend
