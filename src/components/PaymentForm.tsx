@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { SUBSCRIPTION_PLANS } from '@/constants';
+import { STRIPE_PLAN_TYPE, SUBSCRIPTION_PLANS } from '@/constants';
 
 const stripePromise = loadStripe(process.env.STRIPE_PUBLISHABLE_KEY!);
 
@@ -11,12 +11,19 @@ const EMAIL = '1317812522@qq.com';
 export default function SubscriptionForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState(SUBSCRIPTION_PLANS.MONTHLY);
+  const [selectedPlan, setSelectedPlan] = useState(SUBSCRIPTION_PLANS[STRIPE_PLAN_TYPE.Free]);
 
   const handleSubscribe = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      const isFree = selectedPlan.id === STRIPE_PLAN_TYPE.Free;
+
+      if (isFree) {
+        alert('开始使用吧');
+        return;
+      }
 
       const response = await fetch('/api/stripe/create-subscription', {
         method: 'POST',
@@ -24,7 +31,7 @@ export default function SubscriptionForm() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          priceId: selectedPlan.id,
+          priceId: selectedPlan.priceId,
           email: EMAIL,
         }),
       });
@@ -62,7 +69,9 @@ export default function SubscriptionForm() {
         {Object.values(SUBSCRIPTION_PLANS).map((plan) => (
           <div
             key={plan.id}
-            className={`p-4 border rounded-lg cursor-pointer ${selectedPlan.id === plan.id ? 'border-blue-500' : 'border-gray-200'}`}
+            className={`p-4 border rounded-lg cursor-pointer ${
+              selectedPlan.id === plan.id ? 'border-blue-500' : 'border-gray-200'
+            }`}
             onClick={() => setSelectedPlan(plan)}
           >
             <h3 className="font-semibold">{plan.name}</h3>

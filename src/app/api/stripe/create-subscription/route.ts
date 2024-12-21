@@ -23,16 +23,14 @@ export async function POST(request: Request) {
       customer = await stripe.customers.create({
         email,
         metadata: {
-          // 可以添加其他元数据
           createdAt: new Date().toISOString(),
         },
       });
     }
 
-    // 创建 checkout session
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      payment_method_types: ['card'],
+      payment_method_types: ['link', 'card'],
       customer: customer.id,
       line_items: [
         {
@@ -47,7 +45,10 @@ export async function POST(request: Request) {
         priceId,
       },
     });
-    return NextResponse.json({ sessionId: session.id });
+
+    return NextResponse.json({
+      sessionId: session.id,
+    });
   } catch (error: any) {
     console.error('创建订阅失败:', error);
     return NextResponse.json(

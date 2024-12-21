@@ -2,22 +2,38 @@ import Stripe from 'stripe';
 
 export const STRIPE_API_VERSION = '2024-11-20.acacia' as Stripe.LatestApiVersion;
 
+export enum STRIPE_PLAN_TYPE {
+  Free = 'Free',
+  Basic = 'Basic',
+  Pro = 'Pro',
+}
+
 export const STRIPE_PRICES = {
-  MONTHLY: 'price_1QXObmHoe7Ol6CSIhSX5hOuL',
-  YEARLY: 'price_1QXObmHoe7Ol6CSIvVCYZoxE',
+  [STRIPE_PLAN_TYPE.Free]: '',
+  [STRIPE_PLAN_TYPE.Basic]: 'price_1QXObmHoe7Ol6CSIhSX5hOuL',
+  [STRIPE_PLAN_TYPE.Pro]: 'price_1QXObmHoe7Ol6CSIvVCYZoxE',
 };
 
 export const SUBSCRIPTION_PLANS = {
-  MONTHLY: {
-    id: STRIPE_PRICES.MONTHLY,
-    name: '月度订阅',
-    price: 9.99,
+  [STRIPE_PLAN_TYPE.Free]: {
+    id: STRIPE_PLAN_TYPE.Free,
+    priceId: STRIPE_PRICES[STRIPE_PLAN_TYPE.Basic],
+    name: 'Free',
+    price: 0,
     interval: 'month',
   },
-  YEARLY: {
-    id: STRIPE_PRICES.YEARLY,
-    name: '年度订阅',
-    price: 99.99,
-    interval: 'year',
+  [STRIPE_PLAN_TYPE.Basic]: {
+    id: STRIPE_PLAN_TYPE.Basic,
+    name: 'Basic',
+    priceId: STRIPE_PRICES[STRIPE_PLAN_TYPE.Basic],
+    price: 10,
+    interval: 'month',
+  },
+  [STRIPE_PLAN_TYPE.Pro]: {
+    id: STRIPE_PLAN_TYPE.Pro,
+    name: 'Pro',
+    priceId: STRIPE_PRICES[STRIPE_PLAN_TYPE.Pro],
+    price: 20,
+    interval: 'month',
   },
 };
