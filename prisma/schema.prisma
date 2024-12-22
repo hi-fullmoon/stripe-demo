@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 系统用户表
+model User {
+  id               String            @id @default(uuid()) // 主键，自动生成 UUID
+  // ...其他字段
+}
+
+// 客户表
+// 可能会涉及到迁移，之前的用户没有关联到该表
+model Customer {
+  id               String            @id @default(uuid()) // 主键，自动生成 UUID
+  userId           String                                 // 系统用户 userId
+  email            String            @unique              // 客户邮箱
+  stripeCustomerId String?            @unique             // Stripe 客户 Id，可选，免费版没有绑定 stripe customer id
+  subscription     Subscription？                         // 一对一关系：用户的订阅？
+  payments         Payment[]                              // 一对多关系：用户的支付记录
+  createdAt        DateTime          @default(now())      // 创建时间
+  updatedAt        DateTime          @updatedAt           // 更新时间
+}
+
+// 支付表
+model Payment {
+  id               String             @id @default(uuid())
+  amount           Float                                         // 支付金额
+  currency         String             @default("usd")            // 货币类型
+  status           PaymentStatus                                 // 支付状态（枚举类型）
+  stripePaymentId  String             @unique                    // Stripe 支付 Id
+  customerId       String                                        // 外键：用户 Id
+  customer         Customer           @relation(fields: [customerId], references: [id]) // 关联用户
+  createdAt        DateTime           @default(now())            // 创建时间
+  updatedAt        DateTime           @updatedAt                 // 更新时间
+}
+
+// 订阅表
+model Subscription {
+  id                   String             @id @default(uuid())
+  stripeSubscriptionId String             @unique                     // Stripe 订阅 Id
+  status               SubscriptionStatus                             // 订阅状态（枚举类型）
+  customerId           String                                         // 外键：用户 Id
+  user                 Customer           @relation(fields: [customerId], references: [id])
+  planId               String                                         // 直接从配置里通过价格 Id 读取[[套餐数据的设计]]
+  startDate            DateTime                                       // 当前订阅周期开始时间
+  endDate              DateTime                                       // 当前订阅周期结束时间
+  createdAt            DateTime           @default(now())             // 创建时间
+  updatedAt            DateTime           @updatedAt                  // 更新时间
+}
+
+// 功能使用情况表
+model FeatureUsage {
+  id          String    @id @default(uuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  featureCode String    // 对应 FeatureCode
+  used        Float     // 已使用量
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([customerId, featureCode])
+}
+
+
+// 支付状态
+enum PaymentStatus {
+  PENDING            // 待处理
+  SUCCEEDED          // 成功
+  FAILED             // 失败
+}
+
+// 订阅状态
+enum SubscriptionStatus {
+  ACTIVE          // 激活中
+  CANCELED        // 已取消
+  PAST_DUE        // 逾期
+  UNPAID          // 未支付
+  TRIAL           // 试用期
+}

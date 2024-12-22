@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-erd": "node scripts/generate-erd.mjs"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^3.1.1",
