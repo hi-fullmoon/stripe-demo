@@ -51,7 +51,8 @@ async function generateERD() {
     lines.forEach((line) => {
       line = line.trim();
       if (line && !line.startsWith('//')) {
-        const [codePart] = line.split('//');
+        const [codePart, ...commentParts] = line.split('//');
+        const comment = commentParts.join('//').trim(); // 获取字段注释
         const parts = codePart.trim().split(/\s+/);
         const fieldName = parts[0];
         let fieldType = parts[1];
@@ -60,7 +61,7 @@ async function generateERD() {
         // 处理字段属性
         if (fieldType?.endsWith('?')) {
           fieldType = fieldType.slice(0, -1);
-          attributes.push('O'); // Optional
+          attributes.push('O');
         }
         if (parts.includes('@id')) attributes.push('PK');
         if (parts.includes('@unique')) attributes.push('U');
@@ -69,9 +70,10 @@ async function generateERD() {
           if (defaultMatch) attributes.push(`D:${defaultMatch[1]}`);
         }
 
-        // 构建字段描述
-        const attributeStr = attributes.length > 0 ? ` {${attributes.join(',')}}` : '';
-        models[modelName].push(`${fieldName} ${fieldType}${attributeStr}`);
+        // 构建字段描述，添加注释
+        const attributeStr = attributes.length > 0 ? ` ${attributes.join(',')}` : '';
+        const commentStr = comment ? ` ${comment}` : '';
+        models[modelName].push(`${fieldName} ${fieldType}${attributeStr}${commentStr}`);
 
         // 解析关系
         if (line.includes('@relation')) {
