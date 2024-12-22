@@ -7,16 +7,16 @@ erDiagram
 
   %% User: 系统用户表
   User {
-    id String PK 主键，自动生成 UUID
+    id String PK 主键 自动生成 UUID
   }
 
   %% Customer: 可能会涉及到迁移，之前的用户没有关联到该表
   Customer {
-    id String PK 主键，自动生成 UUID
+    id String PK 主键 自动生成 UUID
     userId String 系统用户 userId
     email String U 客户邮箱
-    stripeCustomerId String O,U Stripe 客户 Id，可选，免费版没有绑定 stripe customer id
-    subscription Subscription？ 一对一关系：用户的订阅，可选
+    stripeCustomerId String O,U Stripe 客户 Id 可选 免费版没有绑定 stripe customer id
+    subscription Subscription？ 一对一关系：用户的订阅 可选
     payments Payment[] 一对多关系：用户的支付记录
     createdAt DateTime 创建时间
     updatedAt DateTime 更新时间
