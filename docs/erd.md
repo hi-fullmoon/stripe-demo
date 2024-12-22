@@ -42,7 +42,7 @@ erDiagram
     status SubscriptionStatus
     customerId String
     user Customer
-    planId String
+    plan PlanType
     startDate DateTime
     endDate DateTime
     createdAt DateTime
@@ -81,24 +81,28 @@ erDiagram
     TRIAL
   }
 
+  PlanType {
+    FREE
+    BASIC
+    PRO
+    ENTERPRISE
+  }
+
 
 ```
 
 ## Legend
 
 ### Field Attributes
-
 - PK: Primary Key
 - U: Unique
 - O: Optional (Nullable)
 - D: Default Value
 
 ### Relationships
-
 - ||--||: One-to-One
 - ||--o{: One-to-Many
 
 ### Notes
-
 - Model comments are shown as %% comments
 - Enum types are shown as separate entities
