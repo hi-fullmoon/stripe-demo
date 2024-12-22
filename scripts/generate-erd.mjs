@@ -72,7 +72,7 @@ async function generateERD() {
 
         // 构建字段描述，添加注释
         const attributeStr = attributes.length > 0 ? ` ${attributes.join(',')}` : '';
-        const commentStr = comment ? ` ${comment.replace(/，/g, ' ')}` : '';
+        const commentStr = comment ? `// ${comment}` : '';
         models[modelName].push(`${fieldName} ${fieldType}${attributeStr}${commentStr}`);
 
         // 解析关系
