@@ -52,38 +52,55 @@ async function generateERD() {
       line = line.trim();
       if (line && !line.startsWith('//')) {
         const [codePart, ...commentParts] = line.split('//');
-        const comment = commentParts.join('//').trim(); // 获取字段注释
+        const comment = commentParts.join('//').trim();
         const parts = codePart.trim().split(/\s+/);
         const fieldName = parts[0];
         let fieldType = parts[1];
         const attributes = [];
 
-        // 处理字段属性
-        if (fieldType?.endsWith('?')) {
-          fieldType = fieldType.slice(0, -1);
-          attributes.push('O');
+        // 清理字段类型中的特殊字符
+        if (fieldType) {
+          // 移除可选标记 ? 并添加到属性中
+          if (fieldType.includes('?')) {
+            fieldType = fieldType.replace('?', '');
+            attributes.push('O');
+          }
+          // 移除数组标记 []
+          if (fieldType.includes('[]')) {
+            fieldType = fieldType.replace('[]', '');
+          }
         }
+
+        // 处理字段属性
         if (parts.includes('@id')) attributes.push('PK');
         if (parts.includes('@unique')) attributes.push('U');
         if (parts.includes('@default')) {
           const defaultMatch = line.match(/@default\((.*?)\)/);
-          if (defaultMatch) attributes.push(`D:${defaultMatch[1]}`);
+          if (defaultMatch) {
+            // 处理默认值，确保字符串值被正确引用
+            let defaultValue = defaultMatch[1];
+            if (defaultValue === 'now()') {
+              defaultValue = 'CURRENT_TIMESTAMP';
+            }
+            attributes.push(`D:${defaultValue}`);
+          }
         }
 
-        // 构建字段描述，添加注释
-        const attributeStr = attributes.length > 0 ? ` ${attributes.join(',')}` : '';
-        models[modelName].push(`${fieldName} ${fieldType}${attributeStr}`);
+        // 构建字段描述
+        const attributeStr = attributes.length > 0 ? ` {${attributes.join(',')}}` : '';
+        const fieldDescription = `${fieldType}${attributeStr}`;
+        models[modelName].push(`${fieldName} ${fieldDescription}`);
 
-        // 解析关系
+        // 修改关系解析逻辑
         if (line.includes('@relation')) {
           const relationMatch = line.match(/references: \[(\w+)\]/);
-          const targetModelMatch = line.match(/(\w+)\s+@relation/);
-          if (relationMatch && targetModelMatch) {
+          if (fieldType) {
+            const targetModel = fieldType.replace('?', '').replace('[]', '');
             const isArray = line.includes('[]');
             const relationType = isArray ? '1:*' : '1:1';
             relations.push({
               from: modelName,
-              to: targetModelMatch[1],
+              to: targetModel,
               type: relationType,
               field: fieldName,
             });
