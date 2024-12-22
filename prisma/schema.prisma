@@ -9,14 +9,14 @@ datasource db {
 
 // 系统用户表
 model User {
-  id               String            @id @default(uuid()) // 主键，自动生成 UUID
+  id               String            @id @default(uuid())
   // ...其他字段
 }
 
 // 客户表
 // 可能会涉及到迁移，之前的用户没有关联到该表
 model Customer {
-  id               String            @id @default(uuid()) // 主键，自动生成 UUID
+  id               String            @id @default(uuid())
   userId           String                                 // 系统用户 userId
   email            String            @unique              // 客户邮箱
   stripeCustomerId String?            @unique             // Stripe 客户 Id，可选，免费版没有绑定 stripe customer id
