@@ -7,15 +7,15 @@ erDiagram
 
   %% User: 系统用户表
   User {
-    id String {PK}
+    id String "PK"
   }
 
   %% Customer: 可能会涉及到迁移，之前的用户没有关联到该表
   Customer {
-    id String {PK}
+    id String "PK"
     userId String
-    email String {U}
-    stripeCustomerId String {O,U}
+    email String "UK"
+    stripeCustomerId String "OPTIONAL UK"
     subscription Subscription？
     payments Payment
     createdAt DateTime
@@ -24,11 +24,11 @@ erDiagram
 
   %% Payment: 支付表
   Payment {
-    id String {PK}
+    id String "PK"
     amount Float
     currency String
     status PaymentStatus
-    stripePaymentId String {U}
+    stripePaymentId String "UK"
     customerId String
     customer Customer
     createdAt DateTime
@@ -37,8 +37,8 @@ erDiagram
 
   %% Subscription: 订阅表
   Subscription {
-    id String {PK}
-    stripeSubscriptionId String {U}
+    id String "PK"
+    stripeSubscriptionId String "UK"
     status SubscriptionStatus
     customerId String
     user Customer
@@ -51,7 +51,7 @@ erDiagram
 
   %% FeatureUsage: 功能使用情况表
   FeatureUsage {
-    id String {PK}
+    id String "PK"
     customerId String
     customer Customer
     featureCode String

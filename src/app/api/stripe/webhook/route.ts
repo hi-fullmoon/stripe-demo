@@ -58,7 +58,7 @@ export async function POST(request: Request) {
           case 'past_due':
             // 1. 更新数据库状态
             // 2. 发送提醒邮件
-            // 3. 可以给一定的宽限期
+            // 3. 可以给一定的宽限��
             break;
           case 'unpaid':
             // 1. 更新数据库状态
@@ -158,6 +158,11 @@ export async function POST(request: Request) {
       case 'invoice.upcoming':
         // 即将扣费
         // 发送提醒邮件
+        break;
+
+      case 'payment_intent.succeeded':
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        // 处理支付成功逻辑
         break;
     }
 

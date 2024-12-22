@@ -63,7 +63,7 @@ async function generateERD() {
           // 移除可选标记 ? 并添加到属性中
           if (fieldType.includes('?')) {
             fieldType = fieldType.replace('?', '');
-            attributes.push('O');
+            attributes.push('OPTIONAL');
           }
           // 移除数组标记 []
           if (fieldType.includes('[]')) {
@@ -73,22 +73,26 @@ async function generateERD() {
 
         // 处理字段属性
         if (parts.includes('@id')) attributes.push('PK');
-        if (parts.includes('@unique')) attributes.push('U');
+        if (parts.includes('@unique')) attributes.push('UK');
         if (parts.includes('@default')) {
           const defaultMatch = line.match(/@default\((.*?)\)/);
           if (defaultMatch) {
-            // 处理默认值，确保字符串值被正确引用
             let defaultValue = defaultMatch[1];
             if (defaultValue === 'now()') {
               defaultValue = 'CURRENT_TIMESTAMP';
             }
-            attributes.push(`D:${defaultValue}`);
+            attributes.push(`DEFAULT(${defaultValue})`);
           }
         }
 
         // 构建字段描述
-        const attributeStr = attributes.length > 0 ? ` {${attributes.join(',')}}` : '';
-        const fieldDescription = `${fieldType}${attributeStr}`;
+        const buildFieldDescription = (fieldType, attributes) => {
+          // 将属性转换为字符串，用空格分隔
+          const attributeStr = attributes.length > 0 ? ` "${attributes.join(' ')}"` : '';
+          return `${fieldType}${attributeStr}`;
+        };
+
+        const fieldDescription = buildFieldDescription(fieldType, attributes);
         models[modelName].push(`${fieldName} ${fieldDescription}`);
 
         // 修改关系解析逻辑
