@@ -112,13 +112,15 @@ const parsePrismaSchema = (schemaContent) => {
       // 处理关系
       if (currentBlock === 'model' && line.includes('@relation')) {
         const fieldName = line.split(' ')[0];
-        const fieldType = line.split(' ')[1];
-        relations.push({
-          from: currentBlockName,
-          to: fieldType,
-          type: line.includes('[]') ? '1:*' : '1:1',
-          field: fieldName,
-        });
+        const fieldType = line.split(' ')[1]?.replace(/[\?\[\]]/g, '');
+        if (fieldType) {
+          relations.push({
+            from: currentBlockName,
+            to: fieldType,
+            type: line.includes('[]') ? '1:*' : '1:1',
+            field: fieldName,
+          });
+        }
       }
     }
   });
@@ -147,7 +149,9 @@ const generateMermaidCode = (models, modelComments, relations, enums) => {
     mermaidCode += '  %% Relationships\n';
     relations.forEach(({ from, to, type, field }) => {
       const relationSymbol = type === '1:*' ? '||--o{' : '||--||';
-      mermaidCode += `  ${from} ${relationSymbol} ${to} : "${field}"\n`;
+      if (models[from] && models[to]) {
+        mermaidCode += `  ${from} ${relationSymbol} ${to} : "${field}"\n`;
+      }
     });
     mermaidCode += '\n';
   }

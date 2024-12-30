@@ -124,17 +124,6 @@ erDiagram
     updatedAt DateTime
   }
 
-  %% Relationships
-  Payment ||--||  : "paymentUser"
-  Subscription ||--||  : "workspace"
-  FeatureUsage ||--||  : "workspace"
-  Credit ||--||  : "workspace"
-  CreditRecord ||--||  : "workspace"
-  CreditRecord ||--||  : "paymentUser"
-  CreditRecord ||--||  : "payment"
-  CreditUsage ||--||  : "workspace"
-  AIUsage ||--||  : "workspace"
-
   %% Enums
   PaymentStatus {
     type ENUM "PENDING            // 支付待处理|SUCCEEDED          // 支付成功|FAILED             // 支付失败"
