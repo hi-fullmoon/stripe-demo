@@ -137,45 +137,33 @@ erDiagram
   CreditUsage ||--|| Workspace : "workspace"
   AIUsage ||--|| Workspace : "workspace"
 
-  %% Enums
+  %% Enums as entities with single field
   PaymentStatus {
-    PENDING
-    SUCCEEDED
-    FAILED
+    value ENUM "PENDING|SUCCEEDED|FAILED"
   }
 
   SubscriptionStatus {
-    ACTIVE
-    CANCELED
-    PAST_DUE
-    UNPAID
-    TRIAL
+    value ENUM "ACTIVE|CANCELED|PAST_DUE|UNPAID|TRIAL"
   }
 
   PlanType {
-    FREE
-    BASIC
-    PRO
-    ENTERPRISE
+    value ENUM "FREE|BASIC|PRO|ENTERPRISE"
   }
 
   PaymentPlatform {
-    STRIPE
+    value ENUM "STRIPE"
   }
 
   UsageStatus {
-    SUCCEEDED
-    FAILED
-    REFUNDED
+    value ENUM "SUCCEEDED|FAILED|REFUNDED"
   }
 
   CreditType {
-    PURCHASE
+    value ENUM "PURCHASE"
   }
 
   AIUsageType {
-    TEXT_CHAT
-    IMAGE_GENERATION
+    value ENUM "TEXT_CHAT|IMAGE_GENERATION"
   }
 
 
