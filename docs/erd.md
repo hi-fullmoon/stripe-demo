@@ -10,27 +10,35 @@ erDiagram
     id String "PK"
   }
 
-  %% Customer: 可能会涉及到迁移，之前的用户没有关联到该表
-  Customer {
+  %% Workspace: 工作空间表
+  Workspace {
+    id String "PK"
+    name String
+  }
+
+  %% PaymentUser: 支付用户表
+  PaymentUser {
     id String "PK"
     userId String
     email String "UK"
-    stripeCustomerId String "OPTIONAL UK"
-    subscription Subscription？
+    paymentPlatform PaymentPlatform
+    customerId String "OPTIONAL UK"
     payments Payment
+    credits Credit
     createdAt DateTime
     updatedAt DateTime
   }
 
-  %% Payment: 支付表
+  %% Payment: 支付记录表
   Payment {
     id String "PK"
     amount Float
     currency String
     status PaymentStatus
-    stripePaymentId String "UK"
-    customerId String
-    customer Customer
+    paymentPlatform PaymentPlatform
+    paymentId String "UK"
+    paymentUserId String
+    paymentUser PaymentUser
     createdAt DateTime
     updatedAt DateTime
   }
@@ -38,10 +46,11 @@ erDiagram
   %% Subscription: 订阅表
   Subscription {
     id String "PK"
-    stripeSubscriptionId String "UK"
+    paymentPlatform PaymentPlatform
+    subscriptionId String "UK"
     status SubscriptionStatus
-    customerId String
-    user Customer
+    workspaceId String "UK"
+    workspace Workspace
     plan PlanType
     startDate DateTime
     endDate DateTime
@@ -52,19 +61,82 @@ erDiagram
   %% FeatureUsage: 功能使用情况表
   FeatureUsage {
     id String "PK"
-    customerId String
-    customer Customer
+    workspaceId String
+    workspace Workspace
     featureCode String
     used Float
     createdAt DateTime
     updatedAt DateTime
-    @@unique([customerId, featureCode])
+    @@unique([workspaceId, featureCode])
+  }
+
+  %% Credit: 需要和工作空间绑定吗？？？
+  Credit {
+    id String "PK"
+    workspaceId String "UK"
+    workspace Workspace
+    balance Float
+    total Float
+    totalUsage Float
+    createdAt DateTime
+    updatedAt DateTime
+  }
+
+  %% CreditRecord: 需要和工作空间绑定吗？？？
+  CreditRecord {
+    id String "PK"
+    amount Float
+    type CreditType
+    workspaceId String
+    workspace Workspace
+    paymentUserId String
+    paymentUser PaymentUser
+    paymentId String "OPTIONAL UK"
+    payment Payment "OPTIONAL"
+    description String "OPTIONAL"
+    createdAt DateTime
+    updatedAt DateTime
+  }
+
+  %% CreditUsage: 充值使用记录表
+  CreditUsage {
+    id String "PK"
+    workspaceId String
+    workspace Workspace
+    featureCode String
+    amount Float
+    description String
+    status UsageStatus
+    createdAt DateTime
+    updatedAt DateTime
+  }
+
+  %% AIUsage: AI 使用记录表
+  AIUsage {
+    id String "PK"
+    workspaceId String
+    workspace Workspace
+    type AIUsageType
+    points Int
+    freePoints Int
+    paidPoints Int
+    pageId String
+    description String "OPTIONAL"
+    createdAt DateTime
+    updatedAt DateTime
+    @@index([workspaceId, pageId
   }
 
   %% Relationships
-  Payment ||--|| Customer : "customer"
-  Subscription ||--|| Customer : "user"
-  FeatureUsage ||--|| Customer : "customer"
+  Payment ||--|| PaymentUser : "paymentUser"
+  Subscription ||--|| Workspace : "workspace"
+  FeatureUsage ||--|| Workspace : "workspace"
+  Credit ||--|| Workspace : "workspace"
+  CreditRecord ||--|| Workspace : "workspace"
+  CreditRecord ||--|| PaymentUser : "paymentUser"
+  CreditRecord ||--|| Payment : "payment"
+  CreditUsage ||--|| Workspace : "workspace"
+  AIUsage ||--|| Workspace : "workspace"
 
   %% Enums
   PaymentStatus {
@@ -86,6 +158,25 @@ erDiagram
     BASIC
     PRO
     ENTERPRISE
+  }
+
+  PaymentPlatform {
+    STRIPE
+  }
+
+  UsageStatus {
+    SUCCEEDED
+    FAILED
+    REFUNDED
+  }
+
+  CreditType {
+    PURCHASE
+  }
+
+  AIUsageType {
+    TEXT_CHAT
+    IMAGE_GENERATION
   }
 
 
