@@ -67,7 +67,7 @@ erDiagram
     used Float
     createdAt DateTime
     updatedAt DateTime
-    workspaceId_featureCode String "UK" %% Composite unique constraint
+    workspaceId_featureCode String "UK"
   }
 
   %% Credit: 充值余额表
@@ -123,7 +123,7 @@ erDiagram
     description String "OPTIONAL"
     createdAt DateTime
     updatedAt DateTime
-    workspaceId_pageId String "UK" %% Composite unique constraint
+    workspaceId_pageId String "UK"
   }
 
   %% Relationships
