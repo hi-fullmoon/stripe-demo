@@ -1,30 +1,20 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 
-const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// 处理模型内容，提取字段和属性
 const processModelContent = (modelContent) => {
   const fields = [];
-  const uniqueConstraints = [];
-
   const lines = modelContent.split('\n');
+
   lines.forEach((line) => {
     line = line.trim();
     if (!line || line.startsWith('//')) return;
 
     // 处理复合唯一约束
-    if (line.startsWith('@@unique')) {
-      const match = line.match(/@@unique\(\[(.*?)\]\)/);
-      if (match) {
-        const fields = match[1].split(',').map((f) => f.trim());
-        uniqueConstraints.push(`UNIQUE_CONSTRAINT(${fields.join('+')})`);
-      }
-      return;
-    }
+    if (line.startsWith('@@unique')) return;
 
     // 处理普通字段
     const [codePart, ...commentParts] = line.split('//');
@@ -39,7 +29,7 @@ const processModelContent = (modelContent) => {
       // 移除可选标记 ? 并添加到属性中
       if (fieldType.includes('?')) {
         fieldType = fieldType.replace('?', '');
-        attributes.push('OPTIONAL');
+        attributes.push('O');
       }
       // 移除数组标记 []
       if (fieldType.includes('[]')) {
@@ -49,7 +39,7 @@ const processModelContent = (modelContent) => {
 
     // 处理字段属性
     if (parts.includes('@id')) attributes.push('PK');
-    if (parts.includes('@unique')) attributes.push('UK');
+    if (parts.includes('@unique')) attributes.push('U');
     if (parts.includes('@default')) {
       const defaultMatch = line.match(/@default\((.*?)\)/);
       if (defaultMatch) {
@@ -57,28 +47,86 @@ const processModelContent = (modelContent) => {
         if (defaultValue === 'now()') {
           defaultValue = 'CURRENT_TIMESTAMP';
         }
-        attributes.push(`DEFAULT(${defaultValue})`);
+        attributes.push(`D:${defaultValue}`);
       }
     }
 
     // 构建字段描述
-    const buildFieldDescription = (fieldType, attributes) => {
-      const attributeStr = attributes.length > 0 ? ` "${attributes.join(' ')}"` : '';
-      return `${fieldType}${attributeStr}`;
-    };
-
-    const fieldDescription = buildFieldDescription(fieldType, attributes);
-    fields.push(`${fieldName} ${fieldDescription}`);
-  });
-
-  // 添加复合唯一约束作为特殊字段
-  uniqueConstraints.forEach((constraint) => {
-    fields.push(`_${constraint}`);
+    const attributeStr = attributes.length > 0 ? ` "${attributes.join(' ')}"` : '';
+    fields.push(`${fieldName} ${fieldType}${attributeStr}`);
   });
 
   return fields;
 };
 
+// 解析 Prisma schema
+const parsePrismaSchema = (schemaContent) => {
+  const models = {};
+  const modelComments = {};
+  const relations = [];
+  const enums = {};
+
+  let currentBlock = null;
+  let currentBlockName = null;
+  let currentBlockContent = [];
+  let lastComment = '';
+
+  schemaContent.split('\n').forEach((line) => {
+    line = line.trim();
+
+    // 处理注释
+    if (line.startsWith('//')) {
+      lastComment = line.slice(2).trim();
+      return;
+    }
+
+    // 处理模型或枚举定义的开始
+    if (line.startsWith('model ') || line.startsWith('enum ')) {
+      const [blockType, name] = line.split(' ');
+      currentBlock = blockType;
+      currentBlockName = name.split('{')[0].trim();
+      currentBlockContent = [];
+      if (lastComment && blockType === 'model') {
+        modelComments[currentBlockName] = lastComment;
+      }
+      return;
+    }
+
+    // 处理块的结束
+    if (line === '}' && currentBlock) {
+      if (currentBlock === 'model') {
+        models[currentBlockName] = processModelContent(currentBlockContent.join('\n'));
+      } else if (currentBlock === 'enum') {
+        enums[currentBlockName] = currentBlockContent.filter((l) => l && !l.startsWith('//')).map((l) => l.trim());
+      }
+      currentBlock = null;
+      currentBlockName = null;
+      currentBlockContent = [];
+      return;
+    }
+
+    // 收集块的内容
+    if (currentBlock && line) {
+      currentBlockContent.push(line);
+
+      // 处理关系
+      if (currentBlock === 'model' && line.includes('@relation')) {
+        const fieldName = line.split(' ')[0];
+        const fieldType = line.split(' ')[1];
+        relations.push({
+          from: currentBlockName,
+          to: fieldType,
+          type: line.includes('[]') ? '1:*' : '1:1',
+          field: fieldName,
+        });
+      }
+    }
+  });
+
+  return { models, modelComments, relations, enums };
+};
+
+// 生成 Mermaid 代码
 const generateMermaidCode = (models, modelComments, relations, enums) => {
   let mermaidCode = 'erDiagram\n\n';
 
@@ -117,70 +165,9 @@ const generateMermaidCode = (models, modelComments, relations, enums) => {
   return mermaidCode;
 };
 
-async function generateERD() {
-  const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
-  const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
-
-  // 解析模型和枚举
-  const modelRegex = /model\s+(\w+)\s*{([^}]+)}/g;
-  const enumRegex = /enum\s+(\w+)\s*{([^}]+)}/g;
-  const models = {};
-  const modelComments = {};
-  const enums = {};
-  const relations = [];
-
-  // 解析枚举
-  let enumMatch;
-  while ((enumMatch = enumRegex.exec(schemaContent)) !== null) {
-    const enumName = enumMatch[1];
-    const enumContent = enumMatch[2];
-    enums[enumName] = enumContent
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith('//'))
-      .map((line) => line.split('//')[0].trim());
-  }
-
-  // 解析模型
-  let modelMatch;
-  while ((modelMatch = modelRegex.exec(schemaContent)) !== null) {
-    const modelName = modelMatch[1];
-    const modelContent = modelMatch[2];
-    models[modelName] = [];
-
-    // 获取模型注释
-    const modelCommentMatch = schemaContent
-      .substring(0, modelMatch.index)
-      .split('\n')
-      .reverse()
-      .find((line) => line.trim().startsWith('//'));
-    modelComments[modelName] = modelCommentMatch ? modelCommentMatch.trim().substring(2).trim() : '';
-
-    // 解析字段
-    const fields = processModelContent(modelContent);
-
-    // 修改关系解析逻辑
-    if (modelContent.includes('@relation')) {
-      const relationMatch = modelContent.match(/references: \[(\w+)\]/);
-      if (fields[0]) {
-        const targetModel = fields[0].split(' ')[1].replace('?', '').replace('[]', '');
-        const isArray = modelContent.includes('[]');
-        const relationType = isArray ? '1:*' : '1:1';
-        relations.push({
-          from: modelName,
-          to: targetModel,
-          type: relationType,
-          field: fields[0].split(' ')[0],
-        });
-      }
-    }
-  }
-
-  // 生成 Mermaid 图表代码
-  const mermaidCode = generateMermaidCode(models, modelComments, relations, enums);
-
-  // 生成文档
-  const content = `# Entity Relationship Diagram
+// 生成 ERD 文档
+const generateERDDoc = (mermaidCode) => {
+  return `# Entity Relationship Diagram
 
 This ERD is automatically generated from the Prisma schema.
 
@@ -204,19 +191,31 @@ ${mermaidCode}
 - Model comments are shown as %% comments
 - Enum types are shown as separate entities
 `;
+};
 
-  // 保存文件
-  const outputPath = path.join(process.cwd(), 'docs', 'erd.md');
-  console.log('Trying to save file to:', outputPath);
-
+// 主函数
+async function generateERD() {
   try {
-    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-    fs.writeFileSync(outputPath, content);
-    console.log('File saved successfully');
-    console.log('File contents:');
-    console.log(content);
+    // 读取 Prisma schema
+    const schemaPath = path.join(__dirname, '..', 'prisma', 'schema.prisma');
+    const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
+
+    // 解析 schema
+    const { models, modelComments, relations, enums } = parsePrismaSchema(schemaContent);
+
+    // 生成 Mermaid 代码
+    const mermaidCode = generateMermaidCode(models, modelComments, relations, enums);
+
+    // 生成完整的 ERD 文档
+    const erdDoc = generateERDDoc(mermaidCode);
+
+    // 写入文件
+    const erdPath = path.join(__dirname, '..', 'docs', 'erd.md');
+    fs.writeFileSync(erdPath, erdDoc);
+
+    console.log('ERD generated successfully!');
   } catch (error) {
-    console.error('Error saving file:', error);
+    console.error('Error generating ERD:', error);
   }
 }
 
