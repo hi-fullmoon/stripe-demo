@@ -126,55 +126,43 @@ erDiagram
   }
 
   %% Relationships
-  Payment ||--|| PaymentUser : "paymentUser"
-  Subscription ||--|| Workspace : "workspace"
-  FeatureUsage ||--|| Workspace : "workspace"
-  Credit ||--|| Workspace : "workspace"
-  CreditRecord ||--|| Workspace : "workspace"
-  CreditRecord ||--|| PaymentUser : "paymentUser"
-  CreditRecord ||--|| Payment : "payment"
-  CreditUsage ||--|| Workspace : "workspace"
-  AIUsage ||--|| Workspace : "workspace"
+  Payment }|--|| PaymentUser : "belongs to"
+  Subscription }|--|| Workspace : "belongs to"
+  FeatureUsage }|--|| Workspace : "belongs to"
+  Credit }|--|| Workspace : "belongs to"
+  CreditRecord }|--|| Workspace : "belongs to"
+  CreditRecord }|--|| PaymentUser : "belongs to"
+  CreditRecord }|--o| Payment : "optional payment"
+  CreditUsage }|--|| Workspace : "belongs to"
+  AIUsage }|--|| Workspace : "belongs to"
 
-  %% Enums
+  %% Enums as entities
   PaymentStatus {
-    PENDING
-    SUCCEEDED
-    FAILED
+    status ENUM "PENDING SUCCEEDED FAILED"
   }
 
   SubscriptionStatus {
-    ACTIVE
-    CANCELED
-    PAST_DUE
-    UNPAID
-    TRIAL
+    status ENUM "ACTIVE CANCELED PAST_DUE UNPAID TRIAL"
   }
 
   PlanType {
-    FREE
-    BASIC
-    PRO
-    ENTERPRISE
+    plan ENUM "FREE BASIC PRO ENTERPRISE"
   }
 
   PaymentPlatform {
-    STRIPE
+    platform ENUM "STRIPE"
   }
 
   UsageStatus {
-    SUCCEEDED
-    FAILED
-    REFUNDED
+    status ENUM "SUCCEEDED FAILED REFUNDED"
   }
 
   CreditType {
-    PURCHASE
+    type ENUM "PURCHASE"
   }
 
   AIUsageType {
-    TEXT_CHAT
-    IMAGE_GENERATION
+    type ENUM "TEXT_CHAT IMAGE_GENERATION"
   }
 
 
@@ -190,10 +178,10 @@ erDiagram
 
 ### Relationships
 
-- ||--||: One-to-One
-- ||--o{: One-to-Many
+- }|--||: Many-to-One
+- }|--o|: Many-to-One (Optional)
 
 ### Notes
 
 - Model comments are shown as %% comments
-- Enum types are shown as separate entities
+- Enum types are shown as separate entities with their possible values
