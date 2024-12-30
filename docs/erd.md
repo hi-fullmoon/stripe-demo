@@ -67,10 +67,9 @@ erDiagram
     used Float
     createdAt DateTime
     updatedAt DateTime
-    @@unique([workspaceId, featureCode])
   }
 
-  %% Credit: 需要和工作空间绑定吗？？？
+  %% Credit: 充值余额表
   Credit {
     id String "PK"
     workspaceId String "UK"
@@ -82,7 +81,7 @@ erDiagram
     updatedAt DateTime
   }
 
-  %% CreditRecord: 需要和工作空间绑定吗？？？
+  %% CreditRecord: 充值记录表
   CreditRecord {
     id String "PK"
     amount Float
@@ -124,7 +123,6 @@ erDiagram
     description String "OPTIONAL"
     createdAt DateTime
     updatedAt DateTime
-    @@index([workspaceId, pageId
   }
 
   %% Relationships
@@ -185,15 +183,17 @@ erDiagram
 ## Legend
 
 ### Field Attributes
+
 - PK: Primary Key
-- U: Unique
-- O: Optional (Nullable)
-- D: Default Value
+- UK: Unique Key
+- OPTIONAL: Nullable field
 
 ### Relationships
+
 - ||--||: One-to-One
 - ||--o{: One-to-Many
 
 ### Notes
+
 - Model comments are shown as %% comments
 - Enum types are shown as separate entities
