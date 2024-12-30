@@ -28,7 +28,7 @@ model PaymentUser {
   paymentPlatform  PaymentPlatform   @default(STRIPE)      // 支付平台类型
   customerId       String?           @unique               // 支付平台的客户ID
   payments         Payment[]                               // 用户的所有支付记录
-  credits          Credit[]                                // 用户发起的充值记录
+  creditRecords    CreditRecord[]                          // 用户发起的充值记录
   createdAt        DateTime          @default(now())       // 记录创建时间
   updatedAt        DateTime          @updatedAt            // 记录更新时间
 }
@@ -106,7 +106,6 @@ enum PaymentPlatform {
 }
 
 // 充值余额表
-// 需要和工作空间绑定吗？？？
 model Credit {
   id            String        @id @default(uuid())         // 记录唯一标识
   workspaceId   String        @unique                      // 关联的工作空间ID
@@ -119,7 +118,6 @@ model Credit {
 }
 
 // 充值记录表
-// 需要和工作空间绑定吗？？？
 model CreditRecord {
   id            String        @id @default(uuid())       // 充值记录唯一标识
   amount        Float                                    // 充值金额
@@ -166,16 +164,15 @@ model AIUsage {
   id            String        @id @default(uuid())        // 使用记录唯一标识
   workspaceId   String                                    // 关联的工作空间ID
   workspace     Workspace     @relation(fields: [workspaceId], references: [id]) // 关联的工作空间
-  type          AIUsageType                              // AI 使用类型
-  points        Int                                      // 消耗的点数
-  freePoints    Int                                      // 使用的免费点数
-  paidPoints    Int                                      // 使用的付费点数
-  pageId        String                                   // 页面ID
+  pageId        String                                    // 页面ID
+  type          AIUsageType                               // AI 使用类型
+  points        Int                                       // 消耗的点数
+  freePoints    Int                                       // 免费点数
   description   String?                                   // 使用描述
   createdAt     DateTime      @default(now())             // 记录创建时间
   updatedAt     DateTime      @updatedAt                  // 记录更新时间
 
-  @@index([workspaceId, pageId ])              // 添加索引以优化查询性能
+  @@unique([workspaceId, pageId])                         // 确保每个工作空间的每个页面只有一条使用记录
 }
 
 // AI 使用类型枚举
