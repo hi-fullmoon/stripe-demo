@@ -67,7 +67,7 @@ erDiagram
     used Float
     createdAt DateTime
     updatedAt DateTime
-    @@unique([workspaceId, featureCode])
+    workspaceId_featureCode String "UK" %% Composite unique constraint
   }
 
   %% Credit: 充值余额表
@@ -123,7 +123,7 @@ erDiagram
     description String "OPTIONAL"
     createdAt DateTime
     updatedAt DateTime
-    @@unique([workspaceId, pageId])
+    workspaceId_pageId String "UK" %% Composite unique constraint
   }
 
   %% Relationships
@@ -184,15 +184,18 @@ erDiagram
 ## Legend
 
 ### Field Attributes
+
 - PK: Primary Key
-- U: Unique
-- O: Optional (Nullable)
-- D: Default Value
+- UK: Unique Key (including composite unique constraints)
+- OPTIONAL: Nullable field
 
 ### Relationships
+
 - ||--||: One-to-One
 - ||--o{: One-to-Many
 
 ### Notes
+
 - Model comments are shown as %% comments
 - Enum types are shown as separate entities
+- Composite unique constraints are shown as additional fields with "UK" attribute
