@@ -109,9 +109,7 @@ const generateMermaidCode = (models, modelComments, relations, enums) => {
     mermaidCode += '  %% Enums\n';
     Object.entries(enums).forEach(([enumName, values]) => {
       mermaidCode += `  ${enumName} {\n`;
-      values.forEach((value) => {
-        mermaidCode += `    ${value}\n`;
-      });
+      mermaidCode += `    type ENUM "${values.join('|')}"\n`;
       mermaidCode += '  }\n\n';
     });
   }
