@@ -24,7 +24,7 @@ erDiagram
     paymentPlatform PaymentPlatform
     customerId String "OPTIONAL UK"
     payments Payment
-    credits Credit
+    creditRecords CreditRecord
     createdAt DateTime
     updatedAt DateTime
   }
@@ -67,6 +67,7 @@ erDiagram
     used Float
     createdAt DateTime
     updatedAt DateTime
+    @@unique([workspaceId, featureCode])
   }
 
   %% Credit: 充值余额表
@@ -115,54 +116,66 @@ erDiagram
     id String "PK"
     workspaceId String
     workspace Workspace
+    pageId String
     type AIUsageType
     points Int
     freePoints Int
-    paidPoints Int
-    pageId String
     description String "OPTIONAL"
     createdAt DateTime
     updatedAt DateTime
+    @@unique([workspaceId, pageId])
   }
 
   %% Relationships
-  Payment }|--|| PaymentUser : "belongs to"
-  Subscription }|--|| Workspace : "belongs to"
-  FeatureUsage }|--|| Workspace : "belongs to"
-  Credit }|--|| Workspace : "belongs to"
-  CreditRecord }|--|| Workspace : "belongs to"
-  CreditRecord }|--|| PaymentUser : "belongs to"
-  CreditRecord }|--o| Payment : "optional payment"
-  CreditUsage }|--|| Workspace : "belongs to"
-  AIUsage }|--|| Workspace : "belongs to"
+  Payment ||--|| PaymentUser : "paymentUser"
+  Subscription ||--|| Workspace : "workspace"
+  FeatureUsage ||--|| Workspace : "workspace"
+  Credit ||--|| Workspace : "workspace"
+  CreditRecord ||--|| Workspace : "workspace"
+  CreditRecord ||--|| PaymentUser : "paymentUser"
+  CreditRecord ||--|| Payment : "payment"
+  CreditUsage ||--|| Workspace : "workspace"
+  AIUsage ||--|| Workspace : "workspace"
 
-  %% Enums as entities
+  %% Enums
   PaymentStatus {
-    status ENUM "PENDING SUCCEEDED FAILED"
+    PENDING
+    SUCCEEDED
+    FAILED
   }
 
   SubscriptionStatus {
-    status ENUM "ACTIVE CANCELED PAST_DUE UNPAID TRIAL"
+    ACTIVE
+    CANCELED
+    PAST_DUE
+    UNPAID
+    TRIAL
   }
 
   PlanType {
-    plan ENUM "FREE BASIC PRO ENTERPRISE"
+    FREE
+    BASIC
+    PRO
+    ENTERPRISE
   }
 
   PaymentPlatform {
-    platform ENUM "STRIPE"
+    STRIPE
   }
 
   UsageStatus {
-    status ENUM "SUCCEEDED FAILED REFUNDED"
+    SUCCEEDED
+    FAILED
+    REFUNDED
   }
 
   CreditType {
-    type ENUM "PURCHASE"
+    PURCHASE
   }
 
   AIUsageType {
-    type ENUM "TEXT_CHAT IMAGE_GENERATION"
+    TEXT_CHAT
+    IMAGE_GENERATION
   }
 
 
@@ -171,17 +184,15 @@ erDiagram
 ## Legend
 
 ### Field Attributes
-
 - PK: Primary Key
-- UK: Unique Key
-- OPTIONAL: Nullable field
+- U: Unique
+- O: Optional (Nullable)
+- D: Default Value
 
 ### Relationships
-
-- }|--||: Many-to-One
-- }|--o|: Many-to-One (Optional)
+- ||--||: One-to-One
+- ||--o{: One-to-Many
 
 ### Notes
-
 - Model comments are shown as %% comments
-- Enum types are shown as separate entities with their possible values
+- Enum types are shown as separate entities
