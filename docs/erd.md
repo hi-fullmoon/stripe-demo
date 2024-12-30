@@ -56,43 +56,31 @@ erDiagram
 
   %% Enums
   PaymentStatus {
-    PENDING
-    SUCCEEDED
-    FAILED
+    type ENUM "PENDING|SUCCEEDED|FAILED"
   }
 
   SubscriptionStatus {
-    ACTIVE
-    CANCELED
-    PAST_DUE
-    UNPAID
-    TRIAL
+    type ENUM "ACTIVE|CANCELED|PAST_DUE|UNPAID|TRIAL"
   }
 
   PlanType {
-    FREE
-    BASIC
-    PRO
-    ENTERPRISE
+    type ENUM "FREE|BASIC|PRO|ENTERPRISE"
   }
 
   PaymentPlatform {
-    STRIPE
+    type ENUM "STRIPE"
   }
 
   UsageStatus {
-    SUCCEEDED
-    FAILED
-    REFUNDED
+    type ENUM "SUCCEEDED|FAILED|REFUNDED"
   }
 
   CreditType {
-    PURCHASE
+    type ENUM "PURCHASE"
   }
 
   AIUsageType {
-    TEXT_CHAT
-    IMAGE_GENERATION
+    type ENUM "TEXT_CHAT|IMAGE_GENERATION"
   }
 
 
