@@ -2,6 +2,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../docs/erd.svg"
+  theme    = "neutral" // 可选主题：forest, neutral, dark
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -62,6 +68,7 @@ model Subscription {
   plan                 PlanType // 订阅计划类型
   startDate            DateTime // 当前订阅周期的开始时间
   endDate              DateTime // 当前订阅周期的结束时间
+  cancelDate           DateTime? // 订阅取消时间
   createdAt            DateTime           @default(now()) // 记录创建时间
   updatedAt            DateTime           @updatedAt // 记录更新时间
 }
@@ -109,7 +116,7 @@ model PagePointUsage {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   workspaceId String // 关联的工作空间 ID
   pageId      String // 关联的页面 ID
-  amount      Int // 积分消耗数量
+  amount      Int // 积分消耗数量，超过 20 条就要使用积分了
   createdAt   DateTime @default(now()) // 记录创建时间
   updatedAt   DateTime @updatedAt // 记录更新时间
 
@@ -157,4 +164,11 @@ enum PointRecordType {
   PURCHASE // 购买积分
   CONSUMPTION // 消费积分
   REWARD // 奖励积分
+}
+
+// 充值状态枚举
+enum RechargeStatus {
+  PENDING // 充值待处理
+  SUCCEEDED // 充值成功
+  FAILED // 充值失败
 }

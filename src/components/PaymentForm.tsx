@@ -6,7 +6,7 @@ import { STRIPE_PLAN_TYPE, SUBSCRIPTION_PLANS } from '@/constants';
 
 const stripePromise = loadStripe(process.env.STRIPE_PUBLISHABLE_KEY!);
 
-const EMAIL = '1317812522@qq.com';
+const EMAIL = '';
 
 export default function SubscriptionForm() {
   const [loading, setLoading] = useState(false);
