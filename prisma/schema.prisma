@@ -28,6 +28,7 @@ model Workspace {
   Subscription Subscription?
   FeatureUsage FeatureUsage[]
   Point        Point?
+  PointUsage   PointUsage?
 }
 
 // 支付用户表
@@ -106,22 +107,19 @@ model PointRecord {
   point       Point           @relation(fields: [pointId], references: [id]) // 关联的积分账户
   type        PointRecordType // 积分记录类型
   amount      Int // 积分变动数量（正数表示增加，负数表示减少）
-  description String // 记录描述
+  description String? // 记录描述
   createdAt   DateTime        @default(now()) // 记录创建时间
   updatedAt   DateTime        @updatedAt // 记录更新时间
 }
 
-// 页面积分使用表
-model PagePointUsage {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  workspaceId String // 关联的工作空间 ID
-  pageId      String // 关联的页面 ID
-  amount      Int // 积分消耗数量，超过 20 条就要使用积分了
-  createdAt   DateTime @default(now()) // 记录创建时间
-  updatedAt   DateTime @updatedAt // 记录更新时间
-
-  // 确保每个工作空间每个页面只有一条积分使用记录
-  @@unique([workspaceId, pageId])
+// 积分使用情况表
+model PointUsage {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspaceId String    @unique // 关联的工作空间 ID
+  amount      Int // 积分消耗数量，超过 200 条就要使用积分了
+  workspace   Workspace @relation(fields: [workspaceId], references: [id]) // 关联的工作空间
+  createdAt   DateTime  @default(now()) // 记录创建时间
+  updatedAt   DateTime  @updatedAt // 记录更新时间
 }
 
 enum PaymentType {
@@ -163,7 +161,6 @@ enum PaymentPlatform {
 enum PointRecordType {
   PURCHASE // 购买积分
   CONSUMPTION // 消费积分
-  REWARD // 奖励积分
 }
 
 // 充值状态枚举
