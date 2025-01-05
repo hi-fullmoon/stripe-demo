@@ -160,7 +160,8 @@ enum PaymentPlatform {
 // 积分记录类型枚举
 enum PointRecordType {
   PURCHASE // 购买积分
-  CONSUMPTION // 消费积分
+  TEXT_CHAT // 文字对话消费
+  IMAGE_GENERATION // 图片生成消费
 }
 
 // 充值状态枚举
